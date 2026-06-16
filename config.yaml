@@ -1,0 +1,49 @@
+site:
+  home_url: "https://www.mafengwo.cn/"
+  start_url: ""
+  region_keyword: "山西"
+  list_type: "热门游记"
+
+browser:
+  headless: false
+  user_data_path: "./profiles/mafengwo_profile"
+  page_load_timeout: 60
+  window_width: 1400
+  window_height: 900
+
+crawl:
+  max_pages: 233
+  max_notes: 2794
+  start_page: 1
+  detail_limit: 0
+  retry_times: 3
+  scroll_pause_min: 2
+  scroll_pause_max: 5
+  page_pause_min: 25
+  page_pause_max: 60
+  detail_pause_min: 30
+  detail_pause_max: 90
+  open_next_note_pause_min: 45
+  open_next_note_pause_max: 120
+  save_every_record: true
+  stop_when_no_change: true
+
+output:
+  data_dir: "./data"
+  list_jsonl: "./data/notes_list.jsonl"
+  detail_jsonl: "./data/notes_detail.jsonl"
+  detail_csv: "./data/notes_detail.csv"
+  progress_file: "./data/progress.json"
+  failed_file: "./data/failed_urls.jsonl"
+  media_index: "./data/media_index.jsonl"
+  download_media: false
+  media_dir: "./data/media"
+
+anti_ban:
+  enable_random_delay: true
+  human_like_scroll: true
+  scroll_article_before_parse: true
+  detail_reading_simulation: true
+  min_read_seconds_per_1000_chars: 8
+  max_read_seconds_per_1000_chars: 20
+
