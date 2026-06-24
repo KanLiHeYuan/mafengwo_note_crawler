@@ -64,13 +64,36 @@ return (() => {
   const detailLinks = (root) => Array.from(root.querySelectorAll('a[href*="/i/"]'))
     .filter(a => /\/i\/\d+\.html/.test(absUrl(a.getAttribute('href') || '')));
   const chooseTitleLink = (root) => {
-    const links = detailLinks(root);
-    if (!links.length) return null;
-    const scored = links.map((a, idx) => {
-      const title = clean(a.getAttribute('title')) || clean(a.innerText);
-      return {a, idx, score: (title.length >= 4 ? 100 : 0) + Math.min(title.length, 80)};
-    }).sort((x, y) => y.score - x.score || x.idx - y.idx);
-    return scored[0].a;
+    // 马蜂窝游记列表结构：
+    // dt a = 标题
+    // dd a = 摘要/简介
+    const preferredSelectors = [
+      'div.tn-wrapper dl dt a[href*="/i/"]',
+      'dl dt a[href*="/i/"]',
+      '.tn-title a[href*="/i/"]',
+      'h2 a[href*="/i/"]',
+      'h3 a[href*="/i/"]',
+      'a[href*="/i/"][title]'
+    ];
+    for (const sel of preferredSelectors) {
+      const a = root.querySelector(sel);
+      if (!a) continue;
+      const url = absUrl(a.getAttribute('href') || '');
+      const text = clean(a.getAttribute('title')) || clean(a.innerText || a.textContent);
+      if (/\/i\/\d+\.html/.test(url) && text && text.length >= 2) {
+        return a;
+      }
+    }
+    // 兜底：排除 dd / p / summary / desc 里的简介链接
+    const links = detailLinks(root).filter(a => {
+      const text = clean(a.getAttribute('title')) || clean(a.innerText || a.textContent);
+      if (!text || text.length < 2) return false;
+      const inSummary = a.closest('dd, p, [class*="summary"], [class*="desc"]');
+      return !inSummary;
+    });
+    if (links.length) return links[0];
+    // 最后兜底，避免整个卡片丢失
+    return detailLinks(root)[0] || null;
   };
   const candidateNodes = [];
   const cardSelectors = [
@@ -110,11 +133,22 @@ return (() => {
 
     let title = clean(link.getAttribute('title')) || clean(link.innerText);
     if (!title || title.length < 2) {
-      title = textBySelectors(card, ['h2 a[href*="/i/"]', 'h3 a[href*="/i/"]', 'h2', 'h3', 'a[href*="/i/"][title]']);
+      title = textBySelectors(card, [
+        'div.tn-wrapper dl dt a[href*="/i/"]',
+        'dl dt a[href*="/i/"]',
+        'h2 a[href*="/i/"]',
+        'h3 a[href*="/i/"]',
+        'h2',
+        'h3',
+        'a[href*="/i/"][title]'
+      ]);
     }
     const cover = imgUrl(card.querySelector('img[data-src], img[data-original], img[src]'));
     let summary = textBySelectors(card, [
+      'div.tn-wrapper dl dd a[href*="/i/"]',
       'div.tn-wrapper dl dd',
+      'dl dd a[href*="/i/"]',
+      'dl dd',
       'div[class*="summary"]',
       'div[class*="desc"]',
       'p'
